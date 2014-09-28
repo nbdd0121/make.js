@@ -17,10 +17,12 @@ String.prototype.contains = function contains(str) {
 
 var extensionMatch = /\.[^\/]*$/;
 var filenameMatch = /[^\/]*$/;
+var pathMatch = /^\/?([^/]*\/)*/;
 
 String.prototype.extension = function extension(ext) {
   if (arguments.length == 0) {
-    return extensionMatch.exec(this);
+    var match = extensionMatch.exec(this);
+    return match && match[0];
   } else {
     return this.replace(extensionMatch, ext);
   }
@@ -28,9 +30,19 @@ String.prototype.extension = function extension(ext) {
 
 String.prototype.filename = function filename(name) {
   if (arguments.length == 0) {
-    return filenameMatch.exec(this);
+    var match = filenameMatch.exec(this);
+    return match && match[0];
   } else {
     return this.replace(filenameMatch, ext);
+  }
+}
+
+String.prototype.parentDir = function parentDir(p) {
+  if (arguments.length == 0) {
+    var match = pathMatch.exec(this);
+    return match && match[0];
+  } else {
+    return this.replace(pathMatch, p);
   }
 }
 
@@ -390,9 +402,9 @@ require("./sync.js")(function(sync) {
 
   }
 
-  function runScript(argv) {
+  function runScript(argv, config) {
     try {
-      var data = fs.readFileSync("makescript", "utf-8");
+      var data = fs.readFileSync(config.makescript, "utf-8");
     } catch (e) {
       if (e.code == "ENOENT") {
         throw "Cannot find makescript";
@@ -432,6 +444,9 @@ require("./sync.js")(function(sync) {
   }
 
   function parseOptions(options) {
+    var config = {
+      makescript: "makescript"
+    };
     for (var i = 0; i < options.length; i++) {
       var o = options[i];
       switch (o.cmd) {
@@ -445,16 +460,21 @@ require("./sync.js")(function(sync) {
             }
             break;
           }
+        case "-S":
+          {
+             config.makescript = o.arg;
+          }
       }
     }
+    return config;
   }
 
   (function() {
     var argv = process.argv.slice(2);
     try {
       var options = require("./getopt.js")(argv, "C:");
-      parseOptions(options);
-      runScript(argv);
+      var config = parseOptions(options);
+      runScript(argv, config);
     } catch (e) {
       logError(e);
       process.exit(1);
