@@ -472,7 +472,7 @@ require("./sync.js")(function(sync) {
   (function() {
     var argv = process.argv.slice(2);
     try {
-      var options = require("./getopt.js")(argv, "C:");
+      var options = require("./getopt.js")(argv, "C:S:");
       var config = parseOptions(options);
       runScript(argv, config);
     } catch (e) {
