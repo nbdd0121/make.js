@@ -19,6 +19,14 @@ exports.toArray = toArray;
 
 exports.flattenArray = function flattenArray(array) {
 	array = toArray(array);
+	for (var i = 0; i < array.length; i++) {
+		if (isArrayLike(array[i])) {
+			break;
+		}
+	}
+	if (i === array.length) {
+		return array;
+	}
 	var result = [];
 	for (var i = 0; i < array.length; i++) {
 		if (isArrayLike(array[i])) {

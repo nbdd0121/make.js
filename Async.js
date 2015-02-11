@@ -4,26 +4,34 @@ var child_process = require('child_process');
 var options = require("./make").options;
 
 function await(promise) {
-	var fiber = Fiber.current;
-	var thrown, value;
-	promise.then(function(result) {
-		value = result;
-		thrown = false;
-		fiber.run();
-	}, function(result) {
-		value = result;
-		thrown = true;
-		fiber.run();
-	});
-	Fiber.yield();
-	if (thrown) {
-		if (value.stack) {
-			var currentStack = new Error().stack;
-			value.stack += currentStack.substr(currentStack.indexOf('\n'));
+	if (!Util.isArrayLike(promise)) {
+		var fiber = Fiber.current;
+		var thrown, value;
+		promise.then(function(result) {
+			value = result;
+			thrown = false;
+			fiber.run();
+		}, function(result) {
+			value = result;
+			thrown = true;
+			fiber.run();
+		});
+		Fiber.yield();
+		if (thrown) {
+			if (value.stack) {
+				var currentStack = new Error().stack;
+				value.stack += currentStack.substr(currentStack.indexOf('\n'));
+			}
+			throw value;
+		} else {
+			return value;
 		}
-		throw value;
 	} else {
-		return value;
+		var arr = new Array(promise.length);
+		for (var i = 0; i < promise.length; i++) {
+			arr[i] = await(promise[i]);
+		}
+		return arr;
 	}
 }
 

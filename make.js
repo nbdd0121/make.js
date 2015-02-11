@@ -36,6 +36,13 @@ global.use('basic');
 Async.async(function() {
 	try {
 		Evaluation.evaluate(FileManager.readFile(makescript), makescript, global);
+		if (opt.argv.length) {
+			for (var i = 0; i < opt.argv.length; i++) {
+				global.makeTarget(opt.argv[i], true);
+			}
+		} else {
+			global.makeTarget('default', true);
+		}
 	} catch (e) {
 		if (!options.debug) {
 			console.log(Evaluation.reduceStackTrace(e.stack, makescript));
