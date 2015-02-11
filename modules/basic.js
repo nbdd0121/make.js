@@ -24,6 +24,10 @@ exports.lastModified = FileManager.lastModified;
 var registeredTargets = Object.create(null);
 var genericTargets = [];
 
+var entryCache = Object.create(null);
+var depCache = Object.create(null);
+var dirtyCache = Object.create(null);
+
 function registerTarget(target, dep, actions) {
 	dependency = Util.flattenArray(dep);
 	actions = Util.flattenArray(actions);
@@ -40,23 +44,29 @@ function registerTarget(target, dep, actions) {
 }
 
 function getRegistryEntry(target) {
-	// TODO Add cache
+	if (target in entryCache) {
+		return entryCache[target];
+	}
 
-	var exactMatch = registeredTargets[FileManager.normalize(target)];
-	if (exactMatch) return exactMatch;
-	for (var i = 0; i < genericTargets.length; i++) {
-		var desc = genericTargets[i];
-		if (typeof(desc.target) === 'function') {
-			if (desc.target(target)) {
-				return desc;
-			}
-		} else {
-			if (desc.target.exec(target)) {
-				return desc;
+	var result = registeredTargets[FileManager.normalize(target)];
+	if (!result) {
+		for (var i = 0; i < genericTargets.length; i++) {
+			var desc = genericTargets[i];
+			if (typeof(desc.target) === 'function') {
+				if (desc.target(target)) {
+					result = desc;
+					break;
+				}
+			} else {
+				if (desc.target.exec(target)) {
+					result = desc;
+					break;
+				}
 			}
 		}
 	}
-	return null;
+	entryCache[target] = result;
+	return result;
 }
 
 function getDependency(target, entry) {
@@ -64,7 +74,9 @@ function getDependency(target, entry) {
 		return [];
 	}
 
-	// TODO Add cache
+	if (target in depCache) {
+		return depCache[target];
+	}
 
 	/* If no dependency is generated dynamically
 	 * we just return the original depedency array */
@@ -74,7 +86,7 @@ function getDependency(target, entry) {
 		}
 	}
 	if (i === entry.dependency.length) {
-		return entry.dependency;
+		return depCache[target] = entry.dependency;
 	}
 
 	var dependency = [];
@@ -86,10 +98,14 @@ function getDependency(target, entry) {
 			dependency.push(dep);
 		}
 	}
-	return Util.flattenArray(dependency);
+	return depCache[target] = Util.flattenArray(dependency);
 }
 
 function needToMake(target) {
+	if (target in dirtyCache) {
+		return dirtyCache[target];
+	}
+
 	var entry = getRegistryEntry(target);
 	var dependency = getDependency(target, entry);
 
@@ -98,18 +114,18 @@ function needToMake(target) {
 			console.log('Analyzing target ' + target);
 			console.log('  Target is not listed as a target, ignoring');
 		}
-		return false;
+		return dirtyCache[target] = false;
 	}
 	if (options.alwaysMake) {
 		if (options.verbose) {
 			console.log('Analyzing target ' + target);
 			console.log('  Always-make option set, forced making');
 		}
-		return true;
+		return dirtyCache[target] = true;
 	}
 	for (var i = 0; i < dependency.length; i++) {
 		if (needToMake(dependency[i])) {
-			return true;
+			return dirtyCache[target] = true;
 		}
 	}
 	var targetLM = FileManager.lastModified(target);
@@ -119,7 +135,7 @@ function needToMake(target) {
 		console.log('  Target last modified: ' + new Date(targetLM));
 		console.log('  Dependency last modified: ' + new Date(deplm));
 	}
-	return targetLM <= deplm;
+	return dirtyCache[target] = targetLM <= deplm;
 }
 
 function makeTarget(target, explicit) {
