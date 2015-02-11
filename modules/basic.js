@@ -133,7 +133,7 @@ function makeTarget(target, explicit) {
 		var explicitPropagated = entry.actions.length === 0 && dependency.length === 1;
 
 		for (var i = 0; i < dependency.length; i++) {
-			makeTarget(entry.dependency[i], explicitPropagated);
+			makeTarget(dependency[i], explicitPropagated);
 		}
 		if (options.verbose) {
 			console.log('Making target ' + target);
