@@ -108,30 +108,29 @@ function needToMake(target) {
 		}
 		return dirtyCache[target] = true;
 	}
-	if (entry.phony) {
-		var dirty = false;
-		for (var i = 0; i < dependency.length; i++) {
-			if (needToMake(dependency[i])) {
-				if (options.verbose) {
-					console.log('Analyzing target ' + target);
-					console.log('  Needs to make dependencies');
-				}
-				dirty = true;
-				break;
-			}
-		}
-		if (i === dependency.length) {
+
+	for (var i = 0; i < dependency.length; i++) {
+		if (needToMake(dependency[i])) {
 			if (options.verbose) {
 				console.log('Analyzing target ' + target);
+				console.log('  Needs to make dependencies');
 			}
-			if (entry.actions.length !== 0) {
-				if (options.verbose) {
-					console.log('  Need to perform action');
-				}
-				dirty = true;
-			} else if (options.verbose) {
-				console.log('  No actions should be taken');
+			return dirtyCache[target] = true;
+		}
+	}
+
+	if (entry.phony) {
+		var dirty;
+		if (options.verbose) {
+			console.log('Analyzing target ' + target);
+		}
+		if (entry.actions.length !== 0) {
+			if (options.verbose) {
+				console.log('  Need to perform action');
 			}
+			dirty = true;
+		} else if (options.verbose) {
+			console.log('  No actions should be taken');
 		}
 		return dirtyCache[target] = dirty;
 	} else {
@@ -164,12 +163,16 @@ function makeTarget$(target, explicit) {
 		}
 		return new Async.Promise(function(resolve, reject) {
 			Async.async(function() {
-				semaphore.acquire();
-				for (var i = 0; i < entry.actions.length; i++) {
-					entry.actions[i](target, dependency);
+				try {
+					semaphore.acquire();
+					for (var i = 0; i < entry.actions.length; i++) {
+						entry.actions[i](target, dependency);
+					}
+					semaphore.release();
+					resolve();
+				} catch (e) {
+					reject(e);
 				}
-				semaphore.release();
-				resolve();
 			});
 		});
 	} else {
