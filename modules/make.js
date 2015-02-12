@@ -1,6 +1,7 @@
 var FileManager = require('../FileManager');
 var Util = require('../Util');
 var Async = require('../Async');
+var fs = require('fs');
 
 var options = require("../make").options;
 
@@ -147,8 +148,10 @@ function needToMake(target) {
 
 function makeTarget$(target, explicit) {
 	var entry = getRegistryEntry(target);
-	if (!entry && explicit) {
-		throw new Error('Cannot make target ' + target);
+	if (!entry) {
+		if (explicit || !fs.existsSync(target)) {
+			throw new Error('Cannot make target ' + target);
+		}
 	}
 
 	if (needToMake(target)) {
