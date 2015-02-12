@@ -1,0 +1,11 @@
+{
+	"name": "makescript",
+	"version": "0.1.0",
+	"description": "A javascript-based make tool",
+	"dependencies": {
+		"node-getopt": "0.2.3",
+		"promise": "6.1.0",
+		"fibers": "1.0.5"
+	},
+	"repository": {}
+}
