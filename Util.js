@@ -5,7 +5,9 @@ function isArrayLike(array) {
 }
 
 function toArray(array) {
-	if (Array.isArray(array)) {
+	if (array === undefined) {
+		return [];
+	} else if (Array.isArray(array)) {
 		return array;
 	} else if (isArrayLike(array)) {
 		return Array.prototype.slice.call(array);

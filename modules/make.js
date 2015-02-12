@@ -10,13 +10,14 @@ var entryCache = Object.create(null);
 var depCache = Object.create(null);
 var dirtyCache = Object.create(null);
 
-function registerTarget(target, dep, actions) {
+function registerTarget(target, dep, actions, phony) {
 	dependency = Util.flattenArray(dep);
 	actions = Util.flattenArray(actions);
 	var descriptor = {
 		target: target,
 		dependency: dependency,
-		actions: actions
+		actions: actions,
+		phony: phony
 	};
 	if (typeof(target) === 'string') {
 		registeredTargets[FileManager.normalize(target)] = descriptor;
@@ -105,19 +106,42 @@ function needToMake(target) {
 		}
 		return dirtyCache[target] = true;
 	}
-	for (var i = 0; i < dependency.length; i++) {
-		if (needToMake(dependency[i])) {
-			return dirtyCache[target] = true;
+	if (entry.phony) {
+		var dirty = false;
+		for (var i = 0; i < dependency.length; i++) {
+			if (needToMake(dependency[i])) {
+				if (options.verbose) {
+					console.log('Analyzing target ' + target);
+					console.log('  Needs to make dependencies');
+				}
+				dirty = true;
+				break;
+			}
 		}
+		if (i === dependency.length) {
+			if (options.verbose) {
+				console.log('Analyzing target ' + target);
+			}
+			if (entry.actions.length !== 0) {
+				if (options.verbose) {
+					console.log('  Need to perform action');
+				}
+				dirty = true;
+			} else if (options.verbose) {
+				console.log('  No actions should be taken');
+			}
+		}
+		return dirtyCache[target] = dirty;
+	} else {
+		var targetLM = FileManager.lastModified(target);
+		var deplm = FileManager.lastModified(dependency);
+		if (options.verbose) {
+			console.log('Analyzing target ' + target);
+			console.log('  Target last modified: ' + new Date(targetLM).toLocaleString());
+			console.log('  Dependency last modified: ' + new Date(deplm).toLocaleString());
+		}
+		return dirtyCache[target] = targetLM <= deplm;
 	}
-	var targetLM = FileManager.lastModified(target);
-	var deplm = FileManager.lastModified(dependency);
-	if (options.verbose) {
-		console.log('Analyzing target ' + target);
-		console.log('  Target last modified: ' + new Date(targetLM));
-		console.log('  Dependency last modified: ' + new Date(deplm));
-	}
-	return dirtyCache[target] = targetLM <= deplm;
 }
 
 function makeTarget(target, explicit) {
@@ -128,10 +152,9 @@ function makeTarget(target, explicit) {
 
 	if (needToMake(target)) {
 		var dependency = getDependency(target, entry);
-		var explicitPropagated = entry.actions.length === 0 && dependency.length === 1;
 
 		for (var i = 0; i < dependency.length; i++) {
-			makeTarget(dependency[i], explicitPropagated);
+			makeTarget(dependency[i]);
 		}
 		if (options.verbose) {
 			console.log('Making target ' + target);
@@ -148,10 +171,14 @@ function makeTarget(target, explicit) {
 }
 
 exports.target = function(target, dependency, actions) {
-	registerTarget(target, dependency, actions);
+	registerTarget(target, dependency, actions, false);
+}
+
+exports.phony = function(target, dependency, actions) {
+	registerTarget(target, dependency, actions, true);
 }
 
 exports.makeTarget = makeTarget;
 exports.asDefault = function(target) {
-	registerTarget('default', target, []);
+	registerTarget('default', target, [], true);
 }
