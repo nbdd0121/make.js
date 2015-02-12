@@ -32,6 +32,7 @@ var Async = require('./Async');
 var makescript = 'file' in opt.options ? opt.options.file : 'makescript';
 var global = ModuleManager.createGlobal();
 global.use('basic');
+global.use('make');
 
 Async.async(function() {
 	try {
