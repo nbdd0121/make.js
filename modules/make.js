@@ -1,5 +1,6 @@
 var FileManager = require('../FileManager');
 var Util = require('../Util');
+var Async = require('../Async');
 
 var options = require("../make").options;
 
@@ -9,6 +10,7 @@ var genericTargets = [];
 var entryCache = Object.create(null);
 var depCache = Object.create(null);
 var dirtyCache = Object.create(null);
+var semaphore = new Async.Semaphore(options.jobs);
 
 function registerTarget(target, dep, actions, phony) {
 	dependency = Util.flattenArray(dep);
@@ -144,7 +146,7 @@ function needToMake(target) {
 	}
 }
 
-function makeTarget(target, explicit) {
+function makeTarget$(target, explicit) {
 	var entry = getRegistryEntry(target);
 	if (!entry && explicit) {
 		throw new Error('Cannot make target ' + target);
@@ -152,22 +154,35 @@ function makeTarget(target, explicit) {
 
 	if (needToMake(target)) {
 		var dependency = getDependency(target, entry);
-
+		var promises = new Array(dependency.length);
 		for (var i = 0; i < dependency.length; i++) {
-			makeTarget(dependency[i]);
+			promises[i] = makeTarget$(dependency[i]);
 		}
+		Async.await(promises);
 		if (options.verbose) {
 			console.log('Making target ' + target);
 		}
-		for (var i = 0; i < entry.actions.length; i++) {
-			entry.actions[i](target, dependency);
-		}
+		return new Async.Promise(function(resolve, reject) {
+			Async.async(function() {
+				semaphore.acquire();
+				for (var i = 0; i < entry.actions.length; i++) {
+					entry.actions[i](target, dependency);
+				}
+				semaphore.release();
+				resolve();
+			});
+		});
 	} else {
 		if (explicit || options.verbose) {
 			console.log('No need to make target ' + target);
 		}
-		return false;
+		return Async.Promise.resolve();
 	}
+}
+
+function makeTarget(target, explicit) {
+	Async.await(makeTarget$(target, explicit));
+	return;
 }
 
 exports.target = function(target, dependency, actions) {

@@ -1,11 +1,6 @@
 var Async = require('../Async');
 
-if (!global.Promise) {
-	exports.Promise = require("promise");
-} else {
-	exports.Promise = Promise;
-}
-
+exports.Promise = Async.Promise;
 exports.log = console.log.bind(console);
 exports.chdir = process.chdir.bind(process);
 exports.cwd = process.cwd.bind(process);

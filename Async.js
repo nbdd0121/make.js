@@ -1,6 +1,8 @@
 var Fiber = require('fibers');
 var Util = require('./Util');
 var child_process = require('child_process');
+var Promise = global.Promise ? global.Promise : require("promise");
+
 var options = require("./make").options;
 
 function await(promise) {
@@ -35,14 +37,42 @@ function await(promise) {
 	}
 }
 
+function Semaphore(limit) {
+	this.waiting = [];
+	this.limit = limit;
+	this.counter = 0;
+}
+
+Semaphore.prototype.acquire = function() {
+	if (this.counter >= this.limit) {
+		this.waiting.push(Fiber.current);
+		Fiber.yield();
+	}
+	this.counter++;
+}
+
+Semaphore.prototype.release = function() {
+	this.counter--;
+	if (this.waiting.length) {
+		this.waiting.shift().run();
+	}
+}
+
+Semaphore.prototype.isFull = function() {
+	return this.limit >= this.counter;
+}
+
+exports.Promise = Promise;
+
 exports.async = function(async) {
-	Fiber(function() {
+	var fiber = Fiber(function() {
 		try {
 			async();
 		} catch (e) {
-			console.log('Uncaught exception', e);
+			console.log('Uncaught exception', e.stack);
 		}
-	}).run();
+	});
+	fiber.run();
 }
 
 exports.await = await;
@@ -90,3 +120,5 @@ exports.makeSync = function(async) {
 		return await(async.apply(this, arguments));
 	}
 }
+
+exports.Semaphore = Semaphore;
