@@ -46,6 +46,7 @@ var makescript = 'file' in opt.options ? opt.options.file : 'makescript';
 var global = ModuleManager.createGlobal();
 global.use('basic');
 global.use('make');
+global.use('file');
 
 Async.async(function() {
 	try {
