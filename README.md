@@ -1,4 +1,4 @@
-Makescript v0.1.0
+Makescript v0.1.3
 =================
 
 
@@ -54,12 +54,12 @@ TARGET will only be made if one of DEP needs making or
 one of DEP is newer than TARGET. If made, ACTIONS will
 performed.
 > TARGET can be string, regexp, or function
->>	string means exact match
->>	regexp will match target if regexp.exec(target) returns trusy value
+>>	string means exact match<br/>
+>>	regexp will match target if regexp.exec(target) returns trusy value<br/>
 >>	function will match target if function(target) returns trusy value
 >
 > DEP can be string or function
->>	string means a specified dependency
+>>	string means a specified dependency<br/>
 >>	function will create a dependency list according to return value of function(target)
 >
 >ACTIONS are a list of function
@@ -79,13 +79,13 @@ Set TARGET as the default target. TARGET will be made when no target is specifie
 #### makeParentDirIfNotExist(PATHS)
 Create all PATHS' parent directory if they did not exist
 
-Of the 4 modules, `basic`, `make` and `file` are loaded by default
-When modules are loaded, its functions are added to the global object, so you can use them directly
-You can also access these functions in namespace, for example, `basic.exec` is the same as `exec`
-Loaded modules can be accessed by `loadedModules`
+Of the 4 modules, `basic`, `make` and `file` are loaded by default.<br/>
+When modules are loaded, its functions are added to the global object, so you can use them directly.<br/>
+You can also access these functions in namespace, for example, `basic.exec` is the same as `exec`.<br/>
+Loaded modules can be accessed by `loadedModules`.
 
-To load a module explicitly, use `use('module_name')`.
-For example, if you want to use module `file-helper`, write code `use('file-helper')`
+To load a module explicitly, use `use('module_name')`.<br/>
+For example, if you want to use module `file-helper`, write code `use('file-helper')`.
 
 
 EXAMPLE MAKESCRIPT

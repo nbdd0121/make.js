@@ -164,10 +164,10 @@ function makeTarget$(target, explicit) {
 		if (options.verbose) {
 			console.log('Making target ' + target);
 		}
+		semaphore.acquire();
 		return new Async.Promise(function(resolve, reject) {
 			Async.async(function() {
 				try {
-					semaphore.acquire();
 					for (var i = 0; i < entry.actions.length; i++) {
 						entry.actions[i](target, dependency);
 					}
