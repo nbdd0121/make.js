@@ -37,6 +37,30 @@ function await(promise) {
 	}
 }
 
+function createPromiseOnChildProcess(cmd, c) {
+	return new Promise(function(resolve, reject) {
+		var stdout = "";
+		var stderr = "";
+		c.stdout.on('data', function(data) {
+			if (!options.noStdout) {
+				process.stdout.write(data);
+			}
+			stdout += data;
+		});
+		c.stderr.on('data', function(data) {
+			process.stderr.write(data);
+			stdout += data;
+		});
+		c.on('close', function(code) {
+			if (code) {
+				reject(new Error(cmd + ' return error code ' + code));
+			} else {
+				resolve(stdout);
+			}
+		});
+	});
+}
+
 function Semaphore(limit) {
 	this.waiting = [];
 	this.limit = limit;
@@ -88,31 +112,22 @@ exports.exec = function(cmd, args) {
 		args = Array.prototype.slice.call(arguments, 1);
 	}
 	args = args ? Util.flattenArray(Util.toArray(args)) : [];
-	return new Promise(function(resolve, reject) {
-		if (!options.silent) {
-			console.log(cmd, args.join(' '));
-		}
-		var c = child_process.spawn(cmd, args);
-		var stdout = "";
-		var stderr = "";
-		c.stdout.on('data', function(data) {
-			if (!options.noStdout) {
-				process.stdout.write(data);
-			}
-			stdout += data;
-		});
-		c.stderr.on('data', function(data) {
-			process.stderr.write(data);
-			stdout += data;
-		});
-		c.on('close', function(code) {
-			if (code) {
-				reject(new Error(cmd + ' return error code ' + code));
-			} else {
-				resolve(stdout);
-			}
-		});
+	if (!options.silent) {
+		console.log(cmd, args.join(' '));
+	}
+	var c = child_process.spawn(cmd, args);
+	return createPromiseOnChildProcess(cmd, c);
+}
+
+exports.execJS = function(mod, args) {
+	if (arguments.length > 2) {
+		args = Array.prototype.slice.call(arguments, 1);
+	}
+	args = args ? Util.flattenArray(Util.toArray(args)) : [];
+	var c = child_process.fork(mod, args, {
+		silent: true
 	});
+	return createPromiseOnChildProcess(mod, c);
 }
 
 exports.makeSync = function(async) {

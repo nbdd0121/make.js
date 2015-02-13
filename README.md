@@ -35,6 +35,8 @@ sleep$(TIME)	|Create a promise which will resolve after TIME millseconds
 sleep(TIME)		|Sleep for TIME millseconds
 exec$(CMD, ARG) |Create a promise which will resolve or reject according to the result of executing CMD with argument ARG
 exec(CMD, ARG)	|Execute CMD with argument ARG
+make$(ARG) 		|Create a promise which will resolve or reject according to the result of executing makescript with argument ARG
+make(ARG)		|Execute makescript with argument ARG
 
 file 				|---
 --------------------|-------
@@ -81,7 +83,6 @@ Create all PATHS' parent directory if they did not exist
 
 Of the 4 modules, `basic`, `make` and `file` are loaded by default.<br/>
 When modules are loaded, its functions are added to the global object, so you can use them directly.<br/>
-You can also access these functions in namespace, for example, `basic.exec` is the same as `exec`.<br/>
 Loaded modules can be accessed by `loadedModules`.
 
 To load a module explicitly, use `use('module_name')`.<br/>

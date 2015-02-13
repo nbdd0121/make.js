@@ -35,7 +35,6 @@ exports.createGlobal = function() {
 		if (name.indexOf('/') !== -1) throw new TypeError('Trying to load illegal module name using `use`');
 		if (loadedModules.indexOf(name) !== -1) return false;
 		var mod = loadModule(name);
-		global[name] = mod;
 		extendToObject(global, mod);
 		loadedModules.push(name);
 		return true;

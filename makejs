@@ -1,2 +1,8 @@
 #!/bin/sh
-node `dirname $0`/make.js $@
+
+MAKESCRIPT_DIR=`dirname "$0"`
+case `uname` in
+    *CYGWIN*) MAKESCRIPT_DIR=`cygpath -w "$MAKESCRIPT_DIR"`;;
+esac
+
+node $MAKESCRIPT_DIR/make.js $@
