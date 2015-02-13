@@ -1,11 +1,19 @@
 {
 	"name": "makescript",
-	"version": "0.1.0",
+	"version": "0.1.1",
+	"author": {
+		"name": "Gary Guo",
+		"email": "nbdd0121@hotmail.com",
+		"url": "http://nbdd0121.github.io/"
+	},
 	"description": "A javascript-based make tool",
 	"dependencies": {
 		"node-getopt": "0.2.3",
 		"promise": "6.1.0",
 		"fibers": "1.0.5"
 	},
-	"repository": {}
+	"repository": {
+		"type": "git",
+		"url": "http://github.com/nbdd0121/make.js.git"
+	}
 }
