@@ -42,11 +42,15 @@ var Evaluation = require('./Evaluation');
 var ModuleManager = require('./ModuleManager');
 var Async = require('./Async');
 
-var makescript = 'file' in opt.options ? opt.options.file : 'makescript';
 var global = ModuleManager.createGlobal();
 global.use('basic');
 global.use('make');
 global.use('file');
+
+var makescript = 'file' in opt.options ? opt.options.file : 'makescript';
+if (!global.exists(makescript)) {
+	makescript += '.js';
+}
 
 Async.async(function() {
 	try {

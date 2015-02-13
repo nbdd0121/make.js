@@ -96,11 +96,16 @@ function needToMake(target) {
 	var dependency = getDependency(target, entry);
 
 	if (!entry) {
+		var dirty = !fs.existsSync(target);
 		if (options.verbose) {
 			console.log('Analyzing target ' + target);
-			console.log('  Target is not listed as a target, ignoring');
+			if (dirty) {
+				console.log('  Target does not exist, needs to make');
+			} else {
+				console.log('  Target is not listed as a target, ignoring');
+			}
 		}
-		return dirtyCache[target] = false;
+		return dirtyCache[target] = dirty;
 	}
 	if (options.alwaysMake) {
 		if (options.verbose) {
