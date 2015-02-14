@@ -68,5 +68,6 @@ Async.async(function() {
 		} else {
 			console.log(e.stack);
 		}
+		process.exit(1);
 	}
 });
