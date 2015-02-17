@@ -15,6 +15,9 @@ exports.exec$ = Async.exec;
 exports.exec = Async.makeSync(Async.exec);
 exports.make$ = function() {
 	var args = Array.prototype.slice.call(arguments);
+	if(options.alwaysMake){
+		args.push('-B');
+	}
 	if (!options.silent) {
 		console.log('makejs', args.join(' '));
 	}
