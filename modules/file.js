@@ -1,6 +1,7 @@
 var fs = require('fs');
 var path = require('path');
 var Util = require('../Util');
+var FileManager = require('../FileManager');
 
 var options = require('../make').options;
 
@@ -90,4 +91,8 @@ exports.mkdir = function(path, options) {
 		mkdir(path, options);
 	});
 	log('mkdir', path, options);
+}
+
+exports.include = function(path) {
+	return FileManager.readFile(path);
 }
