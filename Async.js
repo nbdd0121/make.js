@@ -86,6 +86,27 @@ Semaphore.prototype.isFull = function() {
 	return this.limit >= this.counter;
 }
 
+
+function Lock() {
+	this.waiting = [];
+	this.acquired = false;
+}
+
+Lock.prototype.acquire = function() {
+	if (this.acquired) {
+		this.waiting.push(Fiber.current);
+		Fiber.yield();
+	}
+	this.acquired = true;
+}
+
+Lock.prototype.release = function() {
+	this.acquired = false;
+	if (this.waiting.length) {
+		this.waiting.shift().run();
+	}
+}
+
 exports.Promise = Promise;
 
 exports.async = function(async) {
@@ -137,3 +158,4 @@ exports.makeSync = function(async) {
 }
 
 exports.Semaphore = Semaphore;
+exports.Lock = Lock;

@@ -11,6 +11,7 @@ var genericTargets = [];
 var entryCache = Object.create(null);
 var depCache = Object.create(null);
 var dirtyCache = Object.create(null);
+var taskCache = Object.create(null);
 var semaphore = new Async.Semaphore(options.jobs);
 
 function registerTarget(target, dep, actions, phony) {
@@ -152,6 +153,18 @@ function needToMake(target) {
 }
 
 function makeTarget$(target, explicit) {
+	var lock;
+	if (target in taskCache) {
+		lock = taskCache[target];
+		if (lock != true) {
+			lock.acquire();
+			lock.release();
+		}
+		return Async.Promise.resolve();
+	}
+	lock = taskCache[target] = new Async.Lock();
+	lock.acquire();
+
 	var entry = getRegistryEntry(target);
 	if (!entry) {
 		if (explicit || !fs.existsSync(target)) {
@@ -177,6 +190,9 @@ function makeTarget$(target, explicit) {
 						entry.actions[i](target, dependency);
 					}
 					semaphore.release();
+
+					taskCache[target] = true;
+					lock.release();
 					resolve();
 				} catch (e) {
 					reject(e);
@@ -187,6 +203,7 @@ function makeTarget$(target, explicit) {
 		if (explicit || options.verbose) {
 			console.log('No need to make target ' + target);
 		}
+		lock.release();
 		return Async.Promise.resolve();
 	}
 }
